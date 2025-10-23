@@ -39,7 +39,7 @@ def buscar_cita_binaria(nombre):
     while izq <= der:
         medio = (izq + der) // 2
         if citas[medio].paciente.lower() == nombre.lower():
-            print("🔍 Cita encontrada:", citas[medio])
+            print("Cita encontrada:", citas[medio])
             return
         elif citas[medio].paciente.lower() < nombre.lower():
             izq = medio + 1
