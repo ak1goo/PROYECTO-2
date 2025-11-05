@@ -18,7 +18,7 @@ class Patient:
     treatments: List[Dict[str, Any]] = field(default_factory=list)
 
 def ensure_patients_table():
-    """Crea la tabla patients si no existe."""
+
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
         c.execute("""
@@ -66,7 +66,7 @@ def create_patient_db(name: str, age: int, phone: str, address: str = "", photo_
     return p
 
 def load_all_patients_from_db() -> List[Patient]:
-    """Carga todos los pacientes y devuelve una lista de objetos Patient."""
+
     ensure_patients_table()
     out = []
     with sqlite3.connect(DB_FILE) as conn:
@@ -128,7 +128,7 @@ def update_patient_db(pid: int, name: Optional[str] = None, age: Optional[int] =
     return get_patient_by_id(pid)
 
 def delete_patient_db(pid: int) -> bool:
-    """Elimina paciente y devuelve True si existía."""
+
     p = get_patient_by_id(pid)
     if not p:
         return False
@@ -145,7 +145,6 @@ def delete_patient_db(pid: int) -> bool:
     return True
 
 def search_patients_by_name(q: str) -> List[Patient]:
-    """Busca por LIKE en DB (más eficiente que cargar todo y filtrar)."""
     ensure_patients_table()
     out = []
     with sqlite3.connect(DB_FILE) as conn:
