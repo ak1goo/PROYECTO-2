@@ -5,7 +5,7 @@ import json
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import list, Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 
 
 try: 
