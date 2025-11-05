@@ -5,13 +5,13 @@ import json
 import copy
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import list, Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 
 
-try: 
-    from PIL import image
+try:
+    from PIL import Image
     PIL_AVAILABLE = True
-except:
+except Exception:
     PIL_AVAILABLE = False
 
 DB_FILE = "clinic.db"
@@ -69,19 +69,52 @@ class Stack:
     def __init__(self): self._data = []
     def push(self, x): self._data.append(x)
     def pop(self): return self._data.pop() if self._data else None
-    def is_empy(self): return len(self._data) == 0
+    def is_empty(self): return len(self._data) == 0
 
 class Queue: 
     def __init__(self): self._data = []
     def enqueue(self, x): self._data.append(x)
-    def dequeue(self): return self._data.pop(0) if self.data else None
+    def dequeue(self): return self._data.pop(0) if self._data else None
     def is_empty(self): return len(self._data) == 0
 
 
 #---------SQL
 def ensure_db_and_tables():
+    # Create database and basic tables if they don't exist. Keep this minimal and safe.
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
-        c.execute
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS patients (
+                patient_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                age INTEGER,
+                phone TEXT,
+                address TEXT,
+                photo_path TEXT,
+                treatments TEXT
+            )
+            """
+        )
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS appointments (
+                appointment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id INTEGER,
+                date TEXT,
+                service TEXT,
+                price REAL,
+                attended INTEGER DEFAULT 0,
+                FOREIGN KEY(patient_id) REFERENCES patients(patient_id)
+            )
+            """
+        )
+        conn.commit()
+
+    # Ensure photos directory exists
+    try:
+        os.makedirs(PHOTOS_DIR, exist_ok=True)
+    except Exception:
+        pass
 
 
