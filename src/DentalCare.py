@@ -160,7 +160,7 @@ def main_menu():
             age = int(input("Edad: "))
             phone = input("Teléfono: ")
             address = input("Dirección: ")
-            photo = input("Ruta de foto (dejar vacío si no): ").strip() or None
+            photo = input("Ruta de foto: ").strip() or None
             p = create_patient_db(name, age, phone, address, photo)
             sys.patients.append(p)
             sys.patient_hash[p.patient_id] = p
