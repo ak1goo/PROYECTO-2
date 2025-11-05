@@ -1,55 +1,68 @@
+import os
+import shutil
+import sqlite3
+import json
+import copy
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import list, Dict, Any, Optional
 
-class Cita:
-    def __init__(self, paciente, fecha, hora, servicio):
-        self.paciente = paciente
-        self.fecha = fecha
-        self.hora = hora
-        self.servicio = servicio
 
-    def __str__(self):
-        return f"{self.fecha} {self.hora} - {self.paciente} ({self.servicio})"
+try: 
+    from PIL import image
+    PIL_AVAILABLE = True
+except:
+    PIL_AVAILABLE = False
 
-citas = []
+DB_FILE = "clinic.db"
+PHOTOS_DIR = "fotos_pacientes"
 
-def registrar_cita():
-    paciente = input("Nombre del paciente: ")
-    fecha = input("Fecha (dd/mm/aaaa): ")
-    hora = input("Hora (hh:mm): ")
-    servicio = input("Servicio odontológico: ")
 
-    cita = Cita(paciente, fecha, hora, servicio)
-    citas.append(cita)
-    print("Cita registrada correctamente.")
+#-----Mod
 
-def mostrar_citas():
-    if not citas:
-        print("No hay citas registradas.")
-        return
-    print("Citas programadas:")
-    for c in citas:
-        print("-", c)
-    print()
+@dataclass
 
-def buscar_cita_binaria(nombre):
-  
-    ordenar_citas_bubble()
+class Patient:
+    patient_id: int
+    name: str
+    age: int
+    phone: str
+    address: str = ""
+    photo_path: str = ""
+    treatments: list[Dict[str, Any]] = field(default_factory=list)
 
-    izq, der = 0, len(citas) - 1
-    while izq <= der:
-        medio = (izq + der) // 2
-        if citas[medio].paciente.lower() == nombre.lower():
-            print("Cita encontrada:", citas[medio])
-            return
-        elif citas[medio].paciente.lower() < nombre.lower():
-            izq = medio + 1
-        else:
-            der = medio - 1
-    print("No se encontró cita para ese paciente.\n")
+    def __repr__(self):
+        return f"[{self.patient_id}] {self.name} ({self.age} - {self.phone})"
+    
+@dataclass
+class Appointment:
+    appointment_id: int
+    patient_id: int
+    date: str
+    service: str
+    price: float
+    attended: int = 0
 
-def ordenar_citas_bubble():
-    n = len(citas)
-    for i in range(n):
-        for j in range(0, n - i - 1):
-            if citas[j].paciente.lower() > citas[j + 1].paciente.lower():
-                citas[j], citas[j + 1] = citas[j + 1], citas[j]
+    def __repr__(self):
+        return f"[{self.appointment_id}] P{self.patient_id} - {self.service} @ {self.date} - Q{self.price} - Attended:{self.attended}"
+    
+#-----AUX
+class Node:
+    def __init__(self, data: Any):
+        self.data = data
+        self.next = None
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    def push(self, data):
+        n = Node(data); n.next = self.head; self.head = n
+    def to_list(self):
+        out = []
+        cur = self.head
+        while cur:
+            out.append(cur.data)
+            cur = cur.next
+        return out[::-1]
+    
+    
