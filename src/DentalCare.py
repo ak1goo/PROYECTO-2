@@ -122,5 +122,6 @@ class ClinicSystemSQL:
 
 #----DB
 
-
+def load_from_db(self):
+    self.patiens.clear()
 
