@@ -65,4 +65,23 @@ class LinkedList:
             cur = cur.next
         return out[::-1]
     
-    
+class Stack:
+    def __init__(self): self._data = []
+    def push(self, x): self._data.append(x)
+    def pop(self): return self._data.pop() if self._data else None
+    def is_empy(self): return len(self._data) == 0
+
+class Queue: 
+    def __init__(self): self._data = []
+    def enqueue(self, x): self._data.append(x)
+    def dequeue(self): return self._data.pop(0) if self.data else None
+    def is_empty(self): return len(self._data) == 0
+
+
+#---------SQL
+def ensure_db_and_tables():
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        c.execute
+
+
