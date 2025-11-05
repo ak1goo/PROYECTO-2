@@ -8,10 +8,10 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 
-try: 
-    from PIL import image
+try:
+    from PIL import Image
     PIL_AVAILABLE = True
-except:
+except Exception:
     PIL_AVAILABLE = False
 
 DB_FILE = "clinic.db"
@@ -69,59 +69,13 @@ class Stack:
     def __init__(self): self._data = []
     def push(self, x): self._data.append(x)
     def pop(self): return self._data.pop() if self._data else None
-    def is_empy(self): return len(self._data) == 0
+    def is_empty(self): return len(self._data) == 0
 
 class Queue: 
     def __init__(self): self._data = []
     def enqueue(self, x): self._data.append(x)
-    def dequeue(self): return self._data.pop(0) if self.data else None
+    def dequeue(self): return self._data.pop(0) if self._data else None
     def is_empty(self): return len(self._data) == 0
 
 
-#---------SQL
-def ensure_db_and_tables():
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        c.execute("""   
-            CREATE TABLE IF NOT EXSISTING PATIENTS (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  name TEXT NOT NULL,
-                  age INTEGER,
-                  phone TEXT,
-                  address TEXT,
-                  photo_path TEXT
-    )
-    """)
-        c.execute("""   
-            CREATE TABLE IF NOT EXSISTING APPOINTMENTS (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  patient_id INTEGER,
-                  date TEXT,
-                  service TEXT,
-                  price REAL,
-                  attended INTEGER DEFAULT 0,
-                  FOREIGN KEY(patient_id) REFERENCES patients(id)
-    )
-    """)
-    conn.commit()
-
-#-----SISTEMA
-class ClinicSystemSQL:
-    def __init__(self):
-        ensure_db_and_tables()
-        os.makedirs(PHOTOS_DIR, exist_ok=True)
-
-        self.patiens = List[Patient] = []
-        self.appointments = List[Appointment] = []
-        self.patient_hash: Dict[int, Patient]  = {}
-        self.history = LinkedList()
-        self.undo_stack  = Stack()
-        self.waiting_queue  = Queue()
-
-        self.load_from_db()
-
-#----DB
-
-def load_from_db(self):
-    self.patiens.clear()
 
