@@ -83,6 +83,7 @@ def ensure_db_and_tables():
     # Create database and basic tables if they don't exist. Keep this minimal and safe.
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
+<<<<<<< HEAD
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS patients (
@@ -116,5 +117,30 @@ def ensure_db_and_tables():
         os.makedirs(PHOTOS_DIR, exist_ok=True)
     except Exception:
         pass
+=======
+        c.execute("""   
+            CREATE TABLE IF NOT EXSISTING PATIENTS (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL,
+                  age INTEGER,
+                  phone TEXT,
+                  address TEXT,
+                  photo_path TEXT
+    )
+    """)
+        c.execute("""   
+            CREATE TABLE IF NOT EXSISTING APPOINTMENTS (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  patient_id INTEGER,
+                  date TEXT,
+                  service TEXT,
+                  price REAL,
+                  attended INTEGER DEFAULT 0,
+                  FOREIGN KEY(patient_id) REFERENCES patients(id)
+    )
+    """)
+    conn.commit()
+
+>>>>>>> 56a767620f5a47c85bfa8c07f1dc992a58166354
 
 
