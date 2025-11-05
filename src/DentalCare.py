@@ -82,6 +82,28 @@ class Queue:
 def ensure_db_and_tables():
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
-        c.execute
+        c.execute("""   
+            CREATE TABLE IF NOT EXSISTING PATIENTS (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL,
+                  age INTEGER,
+                  phone TEXT,
+                  address TEXT,
+                  photo_path TEXT
+    )
+    """)
+        c.execute("""   
+            CREATE TABLE IF NOT EXSISTING APPOINTMENTS (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  patient_id INTEGER,
+                  date TEXT,
+                  service TEXT,
+                  price REAL,
+                  attended INTEGER DEFAULT 0,
+                  FOREIGN KEY(patient_id) REFERENCES patients(id)
+    )
+    """)
+    conn.commit()
+
 
 
