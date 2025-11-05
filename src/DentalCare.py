@@ -77,5 +77,30 @@ class Queue:
     def dequeue(self): return self._data.pop(0) if self._data else None
     def is_empty(self): return len(self._data) == 0
 
-
+# ---- SQL 
+def ensure_db_and_tables():
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS patients (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                age INTEGER,
+                phone TEXT,
+                address TEXT,
+                photo_path TEXT
+            )
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS appointments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id INTEGER,
+                date TEXT,
+                service TEXT,
+                price REAL,
+                attended INTEGER DEFAULT 0,
+                FOREIGN KEY(patient_id) REFERENCES patients(id)
+            )
+        """)
+        conn.commit()   
 
