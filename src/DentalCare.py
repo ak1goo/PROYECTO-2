@@ -105,5 +105,22 @@ def ensure_db_and_tables():
     """)
     conn.commit()
 
+#-----SISTEMA
+class ClinicSystemSQL:
+    def __init__(self):
+        ensure_db_and_tables()
+        os.makedirs(PHOTOS_DIR, exist_ok=True)
+
+        self.patiens = List[Patient] = []
+        self.appointments = List[Appointment] = []
+        self.patient_hash: Dict[int, Patient]  = {}
+        self.history = LinkedList()
+        self.undo_stack  = Stack()
+        self.waiting_queue  = Queue()
+
+        self.load_from_db()
+
+#----DB
+
 
 
