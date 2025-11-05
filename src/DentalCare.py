@@ -104,3 +104,34 @@ def ensure_db_and_tables():
         """)
         conn.commit()   
 
+#----sistema
+class ClinicSystemSQL:
+    def __init__(self):
+        ensure_db_and_tables()
+        os.makedirs(PHOTOS_DIR, exist_ok=True)
+
+        self.patients: List[Patient] = []
+        self.appointments: List[Appointment] = []
+        self.patient_hash: Dict[int, Patient] = {}
+        self.history = LinkedList()
+        self.undo_stack = Stack()
+        self.waiting_queue = Queue()
+
+        self.load_from_db()
+
+#---db
+def load_from_db(self):
+        self.patients.clear()
+        self.appointments.clear()
+        self.patient_hash.clear()
+        with sqlite3.connect(DB_FILE) as conn:
+            c = conn.cursor()
+            for row in c.execute("SELECT id, name, age, phone, address, photo_path FROM patients"):
+                p = Patient(row[0], row[1], row[2], row[3], row[4] or "", row[5] or "")
+                
+                self.patients.append(p)
+                self.patient_hash[p.patient_id] = p
+            for row in c.execute("SELECT id, patient_id, date, service, price, attended FROM appointments"):
+                a = Appointment(row[0], row[1], row[2], row[3], row[4], row[5])
+                self.appointments.append(a)
+
