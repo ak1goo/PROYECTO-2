@@ -92,7 +92,6 @@ class ClinicSystem:
 
     # --------- Métodos de Ordenamiento ---------
     def bubble_sort_patients_by_name(self):
-        """Ordena la lista de pacientes por nombre usando Bubble Sort"""
         n = len(self.patients)
         for i in range(n):
             for j in range(0, n - i - 1):
@@ -136,7 +135,6 @@ class ClinicSystem:
         try:
             if patient_id not in self.patient_hash:
                 raise ValueError("Error: El paciente no existe en el sistema.")
-            # Aceptar varios formatos de fecha: fecha+hora (YYYY-MM-DD HH:MM) o solo fecha con barras (YYYY/MM/DD)
             date_formats = ["%Y-%m-%d %H:%M", "%Y/%m/%d", "%Y-%m-%d"]
             parsed = None
             used_fmt = None
@@ -150,7 +148,6 @@ class ClinicSystem:
             if not parsed:
                 raise ValueError("Error: Formato de fecha incorrecto. Use 'YYYY-MM-DD HH:MM' o 'YYYY/MM/DD'")
 
-            # Normalizar a 'YYYY-MM-DD HH:MM' (si solo se dio la fecha, se asume hora 00:00)
             date_str = parsed.strftime("%Y-%m-%d %H:%M")
             
             if price < 0:

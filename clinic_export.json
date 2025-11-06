@@ -1,0 +1,41 @@
+{
+  "patients": [
+    {
+      "patient_id": 2,
+      "name": "Martha Legrand",
+      "age": 35,
+      "phone": "5967-4415",
+      "address": "23 av A 4-57 Zona 3 Quetzaltenango",
+      "photo_path": "",
+      "treatments": []
+    },
+    {
+      "patient_id": 3,
+      "name": "Marhta",
+      "age": 45,
+      "phone": "78906543",
+      "address": "13 avenida zona 5",
+      "photo_path": "fotos_pacientes\\patient_3.jpg",
+      "treatments": []
+    },
+    {
+      "patient_id": 5,
+      "name": "Alejandro ",
+      "age": 25,
+      "phone": "49767879",
+      "address": "18 av 1-34 zona 4",
+      "photo_path": "",
+      "treatments": []
+    }
+  ],
+  "appointments": [
+    {
+      "appointment_id": 3,
+      "patient_id": 5,
+      "date": "2025-12-08 10:45",
+      "service": "Ortodoncia ",
+      "price": 1000.0,
+      "attended": 0
+    }
+  ]
+}
