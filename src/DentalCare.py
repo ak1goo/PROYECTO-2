@@ -201,7 +201,7 @@ class ClinicSystem:
 def main_menu():
     sys = ClinicSystem()
     while True:
-        print("\n=== MenúClínica Dental ===")
+        print("\n=== Menú Clínica Dental ===")
         print("1) Agregar paciente")
         print("2) Listar pacientes")
         print("3) Ver detalles de paciente")
