@@ -99,17 +99,6 @@ class ClinicSystem:
                 if self.patients[j].name > self.patients[j + 1].name:
                     self.patients[j], self.patients[j + 1] = self.patients[j + 1], self.patients[j]
 
-    def selection_sort_appointments_by_date(self):
-        """Ordena la lista de citas por fecha usando Selection Sort"""
-        for i in range(len(self.appointments)):
-            min_idx = i
-            for j in range(i + 1, len(self.appointments)):
-                date1 = datetime.strptime(self.appointments[j].date, "%Y-%m-%d %H:%M")
-                date2 = datetime.strptime(self.appointments[min_idx].date, "%Y-%m-%d %H:%M")
-                if date1 < date2:
-                    min_idx = j
-            self.appointments[i], self.appointments[min_idx] = self.appointments[min_idx], self.appointments[i]
-
     def quick_sort_patients_by_id(self):
         """Ordena la lista de pacientes por ID usando Quick Sort"""
         def partition(arr, low, high):
@@ -144,12 +133,6 @@ class ClinicSystem:
         for p in self.patients:
             print(p)
 
-    def list_appointments_ordered(self):
-        """Lista las citas ordenadas por fecha"""
-        self.selection_sort_appointments_by_date()
-        print("\nCitas ordenadas por fecha:")
-        self.list_appointments()
-
     # --------- Citas 
     def create_appointment(self, patient_id: int, date_str: str, service: str, price: float):
         if patient_id not in self.patient_hash:
@@ -167,7 +150,6 @@ class ClinicSystem:
         return appt
 
     def list_appointments(self):
-        self.sort_appointments_by_Date()
         with sqlite3.connect("clinic.db") as conn:
             c = conn.cursor()
             for row in c.execute("SELECT id, patient_id, date, service, price, attended FROM appointments ORDER BY date"):
@@ -181,11 +163,24 @@ class ClinicSystem:
         print("Cita marcada como atendida.")
 
     def cancel_appointment(self, appointment_id: int):
-        with sqlite3.connect("clinic.db") as conn:
-            c = conn.cursor()
-            c.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
-            conn.commit()
-        print("Cita cancelada.")
+        try:
+            with sqlite3.connect("clinic.db") as conn:
+                c = conn.cursor()
+                c.execute("SELECT id FROM appointments WHERE id = ?", (appointment_id,))
+                if not c.fetchone():
+                    raise ValueError(f"Error: La cita con ID {appointment_id} no existe en el sistema.")
+                
+                c.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+                if c.rowcount == 0:
+                    raise ValueError(f"Error: No se pudo eliminar la cita con ID {appointment_id}.")
+                conn.commit()
+                print("Cita cancelada exitosamente.")
+        except sqlite3.Error as e:
+            print(f"Error de base de datos: {str(e)}")
+        except ValueError as e:
+            print(str(e))
+        except Exception as e:
+            print(f"Error inesperado: {str(e)}")
 
     # --------- Exportar datos ---------
     def export_data_json(self):
@@ -215,8 +210,7 @@ def main_menu():
         print("11) Exportar datos a JSON")
         print("12) Listar pacientes ordenados por nombre")
         print("13) Listar pacientes ordenados por ID")
-        print("14) Listar citas ordenadas por fecha")
-        print("15) Salir")
+        print("14) Salir")
         op = input("Elige opción: ").strip()
 
         if op == "1":
@@ -302,9 +296,6 @@ def main_menu():
             sys.list_patients_ordered("id")
 
         elif op == "14":
-            sys.list_appointments_ordered()
-
-        elif op == "15":
             print("Saliendo del sistema...")
             break
 
