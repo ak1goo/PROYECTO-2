@@ -136,11 +136,22 @@ class ClinicSystem:
         try:
             if patient_id not in self.patient_hash:
                 raise ValueError("Error: El paciente no existe en el sistema.")
-            
-            try:
-                datetime.strptime(date_str, "%Y-%m-%d %H:%M")
-            except ValueError:
-                raise ValueError("Error: Formato de fecha incorrecto. Use YYYY-MM-DD HH:MM")
+            # Aceptar varios formatos de fecha: fecha+hora (YYYY-MM-DD HH:MM) o solo fecha con barras (YYYY/MM/DD)
+            date_formats = ["%Y-%m-%d %H:%M", "%Y/%m/%d", "%Y-%m-%d"]
+            parsed = None
+            used_fmt = None
+            for fmt in date_formats:
+                try:
+                    parsed = datetime.strptime(date_str, fmt)
+                    used_fmt = fmt
+                    break
+                except ValueError:
+                    continue
+            if not parsed:
+                raise ValueError("Error: Formato de fecha incorrecto. Use 'YYYY-MM-DD HH:MM' o 'YYYY/MM/DD'")
+
+            # Normalizar a 'YYYY-MM-DD HH:MM' (si solo se dio la fecha, se asume hora 00:00)
+            date_str = parsed.strftime("%Y-%m-%d %H:%M")
             
             if price < 0:
                 raise ValueError("Error: El precio no puede ser negativo.")
@@ -200,6 +211,7 @@ class ClinicSystem:
                 if not c.fetchone():
                     raise ValueError(f"Error: La cita con ID {appointment_id} no existe en el sistema.")
                 
+
                 c.execute("SELECT attended FROM appointments WHERE id = ?", (appointment_id,))
                 row = c.fetchone()
                 if row and row[0] == 1:
@@ -335,10 +347,18 @@ def main_menu():
                 print("Paciente no encontrado.")
 
         elif op == "6":
-            pid = int(input("ID paciente: "))
-            date = input("Fecha y hora (YYYY-MM-DD HH:MM): ")
+            try:
+                pid = int(input("ID paciente: "))
+            except ValueError:
+                print("ID de paciente inválido. Debe ser un número.")
+                continue
+            date = input("Fecha y hora (YYYY-MM-DD HH:MM) o fecha (YYYY/MM/DD): ")
             service = input("Servicio: ")
-            price = float(input("Precio: "))
+            try:
+                price = float(input("Precio: "))
+            except ValueError:
+                print("Precio inválido. Debe ser un número.")
+                continue
             sys.create_appointment(pid, date, service, price)
 
         elif op == "7":
