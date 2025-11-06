@@ -133,32 +133,91 @@ class ClinicSystem:
 
     # --------- Citas 
     def create_appointment(self, patient_id: int, date_str: str, service: str, price: float):
-        if patient_id not in self.patient_hash:
-            print("Paciente no existe.")
+        try:
+            if patient_id not in self.patient_hash:
+                raise ValueError("Error: El paciente no existe en el sistema.")
+            
+            try:
+                datetime.strptime(date_str, "%Y-%m-%d %H:%M")
+            except ValueError:
+                raise ValueError("Error: Formato de fecha incorrecto. Use YYYY-MM-DD HH:MM")
+            
+            if price < 0:
+                raise ValueError("Error: El precio no puede ser negativo.")
+            
+            if not service.strip():
+                raise ValueError("Error: El servicio no puede estar vacío.")
+
+            with sqlite3.connect("clinic.db") as conn:
+                c = conn.cursor()
+                c.execute("INSERT INTO appointments (patient_id, date, service, price) VALUES (?, ?, ?, ?)",
+                          (patient_id, date_str, service, price))
+                conn.commit()
+                appointment_id = c.lastrowid
+                
+                appt = Appointment(appointment_id, patient_id, date_str, service, price)
+                self.appointments.append(appt)
+                print(f"Cita creada exitosamente con ID {appointment_id}")
+                return appt
+
+        except sqlite3.Error as e:
+            print(f"Error de base de datos: {str(e)}")
             return None
-        with sqlite3.connect("clinic.db") as conn:
-            c = conn.cursor()
-            c.execute("INSERT INTO appointments (patient_id, date, service, price) VALUES (?, ?, ?, ?)",
-                      (patient_id, date_str, service, price))
-            conn.commit()
-            appointment_id = c.lastrowid
-        appt = Appointment(appointment_id, patient_id, date_str, service, price)
-        self.appointments.append(appt)
-        print(f" Cita creada con ID {appointment_id}")
-        return appt
+        except ValueError as e:
+            print(str(e))
+            return None
+        except Exception as e:
+            print(f"Error inesperado: {str(e)}")
+            return None
 
     def list_appointments(self):
-        with sqlite3.connect("clinic.db") as conn:
-            c = conn.cursor()
-            for row in c.execute("SELECT id, patient_id, date, service, price, attended FROM appointments ORDER BY date"):
-                print(row)
+        try:
+            with sqlite3.connect("clinic.db") as conn:
+                c = conn.cursor()
+                c.execute("SELECT id, patient_id, date, service, price, attended FROM appointments ORDER BY date")
+                appointments = c.fetchall()
+                
+                if not appointments:
+                    print("No hay citas registradas en el sistema.")
+                    return
+                
+                print("\nLista de citas:")
+                print("ID | Paciente ID | Fecha | Servicio | Precio | Atendida")
+                print("-" * 60)
+                for row in appointments:
+                    print(f"{row[0]:2d} | {row[1]:10d} | {row[2]} | {row[3]:8s} | ${row[4]:6.2f} | {'Sí' if row[5] else 'No'}")
+                
+        except sqlite3.Error as e:
+            print(f"Error al acceder a la base de datos: {str(e)}")
+        except Exception as e:
+            print(f"Error inesperado: {str(e)}")
 
     def mark_attended(self, appointment_id: int):
-        with sqlite3.connect("clinic.db") as conn:
-            c = conn.cursor()
-            c.execute("UPDATE appointments SET attended = 1 WHERE id = ?", (appointment_id,))
-            conn.commit()
-        print("Cita marcada como atendida.")
+        try:
+            with sqlite3.connect("clinic.db") as conn:
+                c = conn.cursor()
+                c.execute("SELECT id FROM appointments WHERE id = ?", (appointment_id,))
+                if not c.fetchone():
+                    raise ValueError(f"Error: La cita con ID {appointment_id} no existe en el sistema.")
+                
+                c.execute("SELECT attended FROM appointments WHERE id = ?", (appointment_id,))
+                row = c.fetchone()
+                if row and row[0] == 1:
+                    raise ValueError(f"Error: La cita con ID {appointment_id} ya está marcada como atendida.")
+                
+                c.execute("UPDATE appointments SET attended = 1 WHERE id = ?", (appointment_id,))
+                if c.rowcount == 0:
+                    raise ValueError(f"Error: No se pudo marcar la cita como atendida.")
+                
+                conn.commit()
+                print("Cita marcada como atendida exitosamente.")
+                
+        except sqlite3.Error as e:
+            print(f"Error de base de datos: {str(e)}")
+        except ValueError as e:
+            print(str(e))
+        except Exception as e:
+            print(f"Error inesperado: {str(e)}")
 
     def cancel_appointment(self, appointment_id: int):
         try:
@@ -182,13 +241,28 @@ class ClinicSystem:
 
     # --------- Exportar datos ---------
     def export_data_json(self):
-        data = {
-            "patients": [p.__dict__ for p in self.patients],
-            "appointments": [a.__dict__ for a in self.appointments]
-        }
-        with open("clinic_export.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print("Datos exportados a clinic_export.json")
+        try:
+            if not self.patients and not self.appointments:
+                raise ValueError("No hay datos para exportar. El sistema está vacío.")
+            
+            data = {
+                "patients": [p.__dict__ for p in self.patients],
+                "appointments": [a.__dict__ for a in self.appointments]
+            }
+            
+            try:
+                with open("clinic_export.json", "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                print("Datos exportados exitosamente a clinic_export.json")
+            except IOError as e:
+                raise IOError(f"Error al escribir el archivo: {str(e)}")
+                
+        except ValueError as e:
+            print(str(e))
+        except IOError as e:
+            print(str(e))
+        except Exception as e:
+            print(f"Error inesperado al exportar datos: {str(e)}")
 
 # ------------------ Menú interactivo ------------------
 def main_menu():
