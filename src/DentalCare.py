@@ -100,7 +100,6 @@ class ClinicSystem:
                     self.patients[j], self.patients[j + 1] = self.patients[j + 1], self.patients[j]
 
     def quick_sort_patients_by_id(self):
-        """Ordena la lista de pacientes por ID usando Quick Sort"""
         def partition(arr, low, high):
             pivot = arr[high].patient_id
             i = low - 1
@@ -122,13 +121,12 @@ class ClinicSystem:
         quick_sort_helper(self.patients, 0, len(self.patients) - 1)
 
     def list_patients_ordered(self, order_type="name"):
-        """Lista los pacientes ordenados según el criterio especificado"""
         if order_type == "name":
             self.bubble_sort_patients_by_name()
-            print("\nPacientes ordenados por nombre:")
+            print("Pacientes ordenados por nombre:")
         elif order_type == "id":
             self.quick_sort_patients_by_id()
-            print("\nPacientes ordenados por ID:")
+            print("Pacientes ordenados por ID:")
         
         for p in self.patients:
             print(p)
