@@ -143,7 +143,7 @@ def main_menu():
         print("\n=== Clínica Dental - Menú ===")
         print("1) Agregar paciente")
         print("2) Listar pacientes")
-        print("3) Ver detalles paciente")
+        print("3) Ver detalles de paciente")
         print("4) Actualizar paciente")
         print("5) Eliminar paciente")
         print("6) Crear cita")
