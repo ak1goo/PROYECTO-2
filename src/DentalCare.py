@@ -90,6 +90,66 @@ class ClinicSystem:
             """)
             conn.commit()
 
+    # --------- Métodos de Ordenamiento ---------
+    def bubble_sort_patients_by_name(self):
+        """Ordena la lista de pacientes por nombre usando Bubble Sort"""
+        n = len(self.patients)
+        for i in range(n):
+            for j in range(0, n - i - 1):
+                if self.patients[j].name > self.patients[j + 1].name:
+                    self.patients[j], self.patients[j + 1] = self.patients[j + 1], self.patients[j]
+
+    def selection_sort_appointments_by_date(self):
+        """Ordena la lista de citas por fecha usando Selection Sort"""
+        for i in range(len(self.appointments)):
+            min_idx = i
+            for j in range(i + 1, len(self.appointments)):
+                date1 = datetime.strptime(self.appointments[j].date, "%Y-%m-%d %H:%M")
+                date2 = datetime.strptime(self.appointments[min_idx].date, "%Y-%m-%d %H:%M")
+                if date1 < date2:
+                    min_idx = j
+            self.appointments[i], self.appointments[min_idx] = self.appointments[min_idx], self.appointments[i]
+
+    def quick_sort_patients_by_id(self):
+        """Ordena la lista de pacientes por ID usando Quick Sort"""
+        def partition(arr, low, high):
+            pivot = arr[high].patient_id
+            i = low - 1
+            
+            for j in range(low, high):
+                if arr[j].patient_id <= pivot:
+                    i += 1
+                    arr[i], arr[j] = arr[j], arr[i]
+            
+            arr[i + 1], arr[high] = arr[high], arr[i + 1]
+            return i + 1
+
+        def quick_sort_helper(arr, low, high):
+            if low < high:
+                pi = partition(arr, low, high)
+                quick_sort_helper(arr, low, pi - 1)
+                quick_sort_helper(arr, pi + 1, high)
+
+        quick_sort_helper(self.patients, 0, len(self.patients) - 1)
+
+    def list_patients_ordered(self, order_type="name"):
+        """Lista los pacientes ordenados según el criterio especificado"""
+        if order_type == "name":
+            self.bubble_sort_patients_by_name()
+            print("\nPacientes ordenados por nombre:")
+        elif order_type == "id":
+            self.quick_sort_patients_by_id()
+            print("\nPacientes ordenados por ID:")
+        
+        for p in self.patients:
+            print(p)
+
+    def list_appointments_ordered(self):
+        """Lista las citas ordenadas por fecha"""
+        self.selection_sort_appointments_by_date()
+        print("\nCitas ordenadas por fecha:")
+        self.list_appointments()
+
     # --------- Citas 
     def create_appointment(self, patient_id: int, date_str: str, service: str, price: float):
         if patient_id not in self.patient_hash:
@@ -107,6 +167,7 @@ class ClinicSystem:
         return appt
 
     def list_appointments(self):
+        self.sort_appointments_by_Date()
         with sqlite3.connect("clinic.db") as conn:
             c = conn.cursor()
             for row in c.execute("SELECT id, patient_id, date, service, price, attended FROM appointments ORDER BY date"):
@@ -140,7 +201,7 @@ class ClinicSystem:
 def main_menu():
     sys = ClinicSystem()
     while True:
-        print("\n=== Menú Clínica Dental ===")
+        print("\n=== MenúClínica Dental ===")
         print("1) Agregar paciente")
         print("2) Listar pacientes")
         print("3) Ver detalles de paciente")
@@ -152,7 +213,10 @@ def main_menu():
         print("9) Cancelar cita")
         print("10) Buscar paciente por nombre")
         print("11) Exportar datos a JSON")
-        print("12) Salir")
+        print("12) Listar pacientes ordenados por nombre")
+        print("13) Listar pacientes ordenados por ID")
+        print("14) Listar citas ordenadas por fecha")
+        print("15) Salir")
         op = input("Elige opción: ").strip()
 
         if op == "1":
@@ -232,6 +296,15 @@ def main_menu():
             sys.export_data_json()
 
         elif op == "12":
+            sys.list_patients_ordered("name")
+
+        elif op == "13":
+            sys.list_patients_ordered("id")
+
+        elif op == "14":
+            sys.list_appointments_ordered()
+
+        elif op == "15":
             print("Saliendo del sistema...")
             break
 
