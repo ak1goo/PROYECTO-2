@@ -1,0 +1,329 @@
+import os, sqlite3
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog, simpledialog
+from ttkbootstrap import Style
+from PIL import Image, ImageTk
+
+from pacientes_sql import (
+    create_patient_db,
+    load_all_patients_from_db,
+    get_patient_by_id,
+    update_patient_db,
+    delete_patient_db,
+    search_patients_by_name
+)
+from utils.algorithms import bubble_sort, selection_sort, busqueda_binaria
+from utils.helpers import validar_fecha, validar_numero, exportar_json
+
+DB_FILE = "clinic.db"
+PIN_CLINICA = "admin123"
+
+
+#LOGIN
+class LoginWindow:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Acceso - DentalCare")
+        self.root.geometry("400x250")
+
+        style = Style("minty")
+
+        frame = ttk.Frame(root, padding=30)
+        frame.pack(expand=True)
+
+        ttk.Label(frame, text="Bienvenido a DentalCare", font=("Segoe UI", 16, "bold")).pack(pady=10)
+        ttk.Label(frame, text="Ingrese el PIN de la clínica").pack(pady=5)
+
+        self.pin_entry = ttk.Entry(frame, show="*", font=("Segoe UI", 12), width=25)
+        self.pin_entry.pack(pady=5)
+
+        ttk.Button(frame, text="Ingresar", bootstyle="success", width=20, command=self.verificar_pin).pack(pady=15)
+
+    def verificar_pin(self):
+        if self.pin_entry.get() == PIN_CLINICA:
+            self.root.destroy()
+            open_main_window()
+        else:
+            messagebox.showerror("Error", "PIN incorrecto. Intente nuevamente.")
+
+
+# Principal
+class DentalCareApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Clínica DentalCare")
+        self.root.geometry("1100x650")
+
+        style = Style("minty")
+
+        title = ttk.Label(root, text="Sistema de Gestión DentalCare",
+                          font=("Segoe UI", 18, "bold"), anchor="center")
+        title.pack(pady=10)
+
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(expand=True, fill="both", padx=10, pady=10)
+
+        self.tab_pacientes = ttk.Frame(self.notebook)
+        self.tab_citas = ttk.Frame(self.notebook)
+
+        self.notebook.add(self.tab_pacientes, text="Pacientes")
+        self.notebook.add(self.tab_citas, text="Citas")
+
+        self._construir_tab_pacientes()
+        self._construir_tab_citas()
+
+    #PACIENTES
+    def _construir_tab_pacientes(self):
+        frame = ttk.Frame(self.tab_pacientes, padding=10)
+        frame.pack(expand=True, fill="both")
+
+        botones = [
+            ("Agregar paciente", self.ventana_agregar_paciente, "success"),
+            ("Listar pacientes", self.listar_pacientes, "info"),
+            ("Ver detalles", self.ver_detalle_paciente, "secondary"),
+            ("Actualizar", self.ventana_actualizar_paciente, "warning"),
+            ("Eliminar", self.ventana_eliminar_paciente, "danger"),
+            ("Buscar nombre", self.buscar_paciente_nombre, "info"),
+            ("Ordenar nombre", self.ordenar_por_nombre, "primary"),
+            ("Ordenar ID", self.ordenar_por_id, "primary"),
+            ("Buscar ID (binaria)", self.buscar_binaria, "secondary"),
+            ("Exportar JSON", self.exportar_datos, "success"),
+        ]
+
+        botones_frame = ttk.Frame(frame)
+        botones_frame.pack(pady=10)
+
+        for i, (text, cmd, color) in enumerate(botones):
+            ttk.Button(botones_frame, text=text, bootstyle=color, command=cmd).grid(row=i//5, column=i%5, padx=5, pady=5, ipadx=5)
+
+        self.tree_pacientes = ttk.Treeview(frame, columns=("ID", "Nombre", "Edad", "Teléfono"),
+                                           show="headings", height=16)
+        for col in ("ID", "Nombre", "Edad", "Teléfono"):
+            self.tree_pacientes.heading(col, text=col)
+            self.tree_pacientes.column(col, anchor="center", width=200)
+        self.tree_pacientes.pack(fill="both", expand=True, pady=10)
+
+        self.listar_pacientes()
+
+    #CITAS 
+    def _construir_tab_citas(self):
+        frame = ttk.Frame(self.tab_citas, padding=10)
+        frame.pack(expand=True, fill="both")
+
+        botones = [
+            ("Crear cita", self.ventana_crear_cita, "success"),
+            ("Listar citas", self.listar_citas, "info"),
+            ("Marcar atendida", self.marcar_atendida, "warning"),
+            ("Cancelar cita", self.cancelar_cita, "danger")
+        ]
+
+        botones_frame = ttk.Frame(frame)
+        botones_frame.pack(pady=10)
+
+        for i, (text, cmd, color) in enumerate(botones):
+            ttk.Button(botones_frame, text=text, bootstyle=color, command=cmd).grid(row=0, column=i, padx=5, pady=5, ipadx=10)
+
+        self.tree_citas = ttk.Treeview(frame,
+                                       columns=("ID", "Paciente", "Fecha", "Servicio", "Precio", "Atendida"),
+                                       show="headings", height=16)
+        for col in ("ID", "Paciente", "Fecha", "Servicio", "Precio", "Atendida"):
+            self.tree_citas.heading(col, text=col)
+            self.tree_citas.column(col, anchor="center", width=170)
+        self.tree_citas.pack(fill="both", expand=True, pady=10)
+
+        self.listar_citas()
+
+    # FUNCIONES PACIENTES 
+    def listar_pacientes(self):
+        for row in self.tree_pacientes.get_children():
+            self.tree_pacientes.delete(row)
+        for p in load_all_patients_from_db():
+            self.tree_pacientes.insert("", tk.END, values=(p.patient_id, p.name, p.age, p.phone))
+
+    def ventana_agregar_paciente(self):
+        top = tk.Toplevel(self.root)
+        top.title("Agregar paciente")
+        top.geometry("400x420")
+        campos = ["Nombre", "Edad", "Teléfono", "Dirección"]
+        entries = {}
+        for i, c in enumerate(campos):
+            ttk.Label(top, text=c + ":").grid(row=i, column=0, padx=10, pady=5)
+            e = ttk.Entry(top)
+            e.grid(row=i, column=1)
+            entries[c] = e
+
+        photo_path = tk.StringVar()
+        ttk.Button(top, text="Seleccionar foto", command=lambda: photo_path.set(filedialog.askopenfilename(title="Seleccionar imagen", filetypes=[("Imágenes", "*.jpg *.png")]))).grid(row=4, column=0, columnspan=2, pady=5)
+
+        ttk.Button(top, text="Guardar", bootstyle="success",
+                   command=lambda: self._guardar_paciente(entries, photo_path, top)).grid(row=5, column=0, columnspan=2, pady=10)
+
+    def _guardar_paciente(self, entries, photo_path, top):
+        name, age, phone, addr = entries["Nombre"].get(), entries["Edad"].get(), entries["Teléfono"].get(), entries["Dirección"].get()
+        if not name or not age.isdigit():
+            messagebox.showerror("Error", "Nombre y edad válidos requeridos.")
+            return
+        p = create_patient_db(name, int(age), phone, addr, photo_path.get() or None)
+        messagebox.showinfo("Éxito", f"Paciente {p.name} agregado.")
+        self.listar_pacientes()
+        top.destroy()
+
+    def ver_detalle_paciente(self):
+        sel = self.tree_pacientes.selection()
+        if not sel: return messagebox.showwarning("Atención", "Seleccione un paciente.")
+        pid = self.tree_pacientes.item(sel[0])["values"][0]
+        p = get_patient_by_id(pid)
+        if not p: return messagebox.showerror("Error", "Paciente no encontrado.")
+        top = ttk.Toplevel(self.root)
+        top.title("Detalles")
+        ttk.Label(top, text=f"ID: {p.patient_id}\nNombre: {p.name}\nEdad: {p.age}\nTel: {p.phone}\nDir: {p.address}").pack(pady=10)
+        if p.photo_path and os.path.exists(p.photo_path):
+            img = Image.open(p.photo_path).resize((200, 200))
+            photo = ImageTk.PhotoImage(img)
+            ttk.Label(top, image=photo).pack()
+            top.image = photo
+
+    def ventana_actualizar_paciente(self):
+        sel = self.tree_pacientes.selection()
+        if not sel: return messagebox.showwarning("Atención", "Seleccione un paciente.")
+        pid = self.tree_pacientes.item(sel[0])["values"][0]
+        p = get_patient_by_id(pid)
+        top = tk.Toplevel(self.root)
+        top.title("Actualizar")
+        campos = {"Nombre": p.name, "Edad": p.age, "Teléfono": p.phone, "Dirección": p.address}
+        entries = {}
+        for i, (label, val) in enumerate(campos.items()):
+            ttk.Label(top, text=label + ":").grid(row=i, column=0, padx=10, pady=5)
+            e = ttk.Entry(top)
+            e.insert(0, str(val))
+            e.grid(row=i, column=1)
+            entries[label] = e
+        ttk.Button(top, text="Guardar", bootstyle="warning",
+                   command=lambda: self._guardar_actualizacion(pid, entries, top)).grid(row=5, column=0, columnspan=2, pady=10)
+
+    def _guardar_actualizacion(self, pid, entries, top):
+        update_patient_db(pid, name=entries["Nombre"].get(), age=int(entries["Edad"].get()),
+                          phone=entries["Teléfono"].get(), address=entries["Dirección"].get())
+        messagebox.showinfo("Actualizado", "Paciente actualizado correctamente.")
+        self.listar_pacientes()
+        top.destroy()
+
+    def ventana_eliminar_paciente(self):
+        sel = self.tree_pacientes.selection()
+        if not sel: return messagebox.showwarning("Atención", "Seleccione un paciente.")
+        pid = self.tree_pacientes.item(sel[0])["values"][0]
+        if messagebox.askyesno("Confirmar", "¿Eliminar paciente?"):
+            delete_patient_db(pid)
+            self.listar_pacientes()
+
+    def buscar_paciente_nombre(self):
+        nombre = simpledialog.askstring("Buscar", "Ingrese nombre:")
+        if not nombre: return
+        pacientes = search_patients_by_name(nombre)
+        for row in self.tree_pacientes.get_children(): self.tree_pacientes.delete(row)
+        for p in pacientes:
+            self.tree_pacientes.insert("", tk.END, values=(p.patient_id, p.name, p.age, p.phone))
+
+    def ordenar_por_nombre(self):
+        pac = bubble_sort(load_all_patients_from_db(), key=lambda x: x.name.lower())
+        self._mostrar_lista(pac)
+
+    def ordenar_por_id(self):
+        pac = selection_sort(load_all_patients_from_db(), key=lambda x: x.patient_id)
+        self._mostrar_lista(pac)
+
+    def _mostrar_lista(self, pac):
+        for row in self.tree_pacientes.get_children(): self.tree_pacientes.delete(row)
+        for p in pac:
+            self.tree_pacientes.insert("", tk.END, values=(p.patient_id, p.name, p.age, p.phone))
+
+    def buscar_binaria(self):
+        pid = simpledialog.askinteger("Buscar ID", "Ingrese el ID:")
+        if pid is None: return
+        pac = load_all_patients_from_db()
+        pac.sort(key=lambda x: x.patient_id)
+        res = busqueda_binaria(pac, key=lambda x: x.patient_id, valor=pid)
+        messagebox.showinfo("Resultado", f"Paciente: {res.name}" if res else "No encontrado.")
+
+    def exportar_datos(self):
+        pac = load_all_patients_from_db()
+        with sqlite3.connect(DB_FILE) as conn:
+            citas = list(conn.execute("SELECT * FROM appointments"))
+        exportar_json(pac, citas)
+        messagebox.showinfo("Exportar", "Datos exportados a clinic_export.json")
+
+    # CITAS
+    def _ensure_appointments_table(self):
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS appointments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    patient_id INTEGER,
+                    date TEXT,
+                    service TEXT,
+                    price REAL,
+                    attended INTEGER DEFAULT 0
+                )
+            """)
+
+    def ventana_crear_cita(self):
+        top = tk.Toplevel(self.root)
+        top.title("Nueva cita")
+        campos = ["ID Paciente", "Fecha (YYYY-MM-DD HH:MM)", "Servicio", "Precio"]
+        entries = {}
+        for i, c in enumerate(campos):
+            ttk.Label(top, text=c + ":").grid(row=i, column=0, padx=10, pady=5)
+            e = ttk.Entry(top)
+            e.grid(row=i, column=1)
+            entries[c] = e
+        ttk.Button(top, text="Guardar", bootstyle="success",
+                   command=lambda: self._guardar_cita(entries, top)).grid(row=5, column=0, columnspan=2, pady=10)
+
+    def _guardar_cita(self, entries, top):
+        pid, date, service, price = entries["ID Paciente"].get(), entries["Fecha (YYYY-MM-DD HH:MM)"].get(), entries["Servicio"].get(), entries["Precio"].get()
+        if not (pid.isdigit() and validar_fecha(date) and validar_numero(price)):
+            messagebox.showerror("Error", "Verifique los datos.")
+            return
+        self._ensure_appointments_table()
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.execute("INSERT INTO appointments (patient_id, date, service, price) VALUES (?, ?, ?, ?)",
+                         (int(pid), date, service, float(price)))
+        self.listar_citas()
+        top.destroy()
+
+    def listar_citas(self):
+        self._ensure_appointments_table()
+        for row in self.tree_citas.get_children(): self.tree_citas.delete(row)
+        with sqlite3.connect(DB_FILE) as conn:
+            for row in conn.execute("SELECT id, patient_id, date, service, price, attended FROM appointments"):
+                self.tree_citas.insert("", tk.END, values=row)
+
+    def marcar_atendida(self):
+        sel = self.tree_citas.selection()
+        if not sel: return messagebox.showwarning("Atención", "Seleccione una cita.")
+        cid = self.tree_citas.item(sel[0])["values"][0]
+        with sqlite3.connect(DB_FILE) as conn:
+            conn.execute("UPDATE appointments SET attended = 1 WHERE id = ?", (cid,))
+        self.listar_citas()
+
+    def cancelar_cita(self):
+        sel = self.tree_citas.selection()
+        if not sel: return messagebox.showwarning("Atención", "Seleccione una cita.")
+        cid = self.tree_citas.item(sel[0])["values"][0]
+        if messagebox.askyesno("Confirmar", "¿Cancelar cita?"):
+            with sqlite3.connect(DB_FILE) as conn:
+                conn.execute("DELETE FROM appointments WHERE id = ?", (cid,))
+            self.listar_citas()
+
+
+#MAIN 
+def open_main_window():
+    root = tk.Tk()
+    app = DentalCareApp(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    LoginWindow(root)
+    root.mainloop()
