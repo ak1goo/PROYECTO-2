@@ -19,7 +19,7 @@ def iniciar_sesion():
     while intentos > 0:
         pin = input("Ingrese el PIN:").strip()
         if pin == PIN_CLINICA:
-            print("\n Acceso concedido. Bienvenid@ al sistema DentalCare\n")
+            print("\n Acceso concedido. Bienvenid@ al sistema Dental Care\n")
             return True
         else:
             intentos -= 1
