@@ -1,5 +1,5 @@
 {
-  "patients": [
+  "pacientes": [
     {
       "patient_id": 2,
       "name": "Martha Legrand",
@@ -10,15 +10,6 @@
       "treatments": []
     },
     {
-      "patient_id": 3,
-      "name": "Marhta",
-      "age": 45,
-      "phone": "78906543",
-      "address": "13 avenida zona 5",
-      "photo_path": "fotos_pacientes\\patient_3.jpg",
-      "treatments": []
-    },
-    {
       "patient_id": 5,
       "name": "Alejandro ",
       "age": 25,
@@ -26,16 +17,69 @@
       "address": "18 av 1-34 zona 4",
       "photo_path": "",
       "treatments": []
+    },
+    {
+      "patient_id": 6,
+      "name": "Juan",
+      "age": 23,
+      "phone": "6789 6576",
+      "address": "13 av 1-34 zona 4",
+      "photo_path": "fotos_pacientes\\patient_6.jpg",
+      "treatments": []
+    },
+    {
+      "patient_id": 7,
+      "name": "Esther",
+      "age": 18,
+      "phone": "5679 7652",
+      "address": "22 av A Zona 4",
+      "photo_path": "fotos_pacientes\\patient_7.JPG",
+      "treatments": []
+    },
+    {
+      "patient_id": 8,
+      "name": "Lisa",
+      "age": 19,
+      "phone": "8384 8289",
+      "address": "27A Zona 5 Xela",
+      "photo_path": "",
+      "treatments": []
+    },
+    {
+      "patient_id": 9,
+      "name": "Juan",
+      "age": 34,
+      "phone": "57689876",
+      "address": "15 av zona 4",
+      "photo_path": "",
+      "treatments": []
+    },
+    {
+      "patient_id": 10,
+      "name": "Julio",
+      "age": 24,
+      "phone": "6789 9876",
+      "address": "20 avenida 1-45 zona 6",
+      "photo_path": "",
+      "treatments": []
     }
   ],
-  "appointments": [
-    {
-      "appointment_id": 3,
-      "patient_id": 5,
-      "date": "2025-12-08 10:45",
-      "service": "Ortodoncia ",
-      "price": 1000.0,
-      "attended": 0
-    }
+  "citas": [
+    [
+      3,
+      5,
+      "2025-12-08 10:45",
+      "Ortodoncia ",
+      1000.0,
+      0
+    ],
+    [
+      4,
+      2,
+      "2025-12-20 10:30",
+      "Limpieda",
+      500.0,
+      0
+    ]
   ]
 }
