@@ -1,11 +1,34 @@
 #!/usr/bin/env python3
 """
-Sistema de Clínica Odontológica 
+Sistema de Clínica Odontológica Dental Care
 """
 
 import os, sys
 import sqlite3
 import json
+
+#Inicio de sesion
+
+PIN_CLINICA = "admin123"
+
+def iniciar_sesion():
+    print("\n---SISTEMA DENTAL CARE---")
+    print("Acceso Restringido - Ingrese el pin de la clinica\n")
+
+    intentos = 3
+    while intentos > 0:
+        pin = input("Ingrese el PIN:").strip()
+        if pin == PIN_CLINICA:
+            print("\n Acceso concedido. Bienvenid@ al sistema DentalCare\n")
+            return True
+        else:
+            intentos -= 1
+            print(f"PIN incorrecto. Intentos restantes: {intentos}\n")
+
+    print("Acceso denegado. Saliendo del sistema.")
+    exit()
+
+
 from datetime import datetime
 from dataclasses import dataclass
 from typing import List, Dict, Any
@@ -17,6 +40,8 @@ from Classes.ClassNode import Node
 from Classes.ClassLinkedList import LinkedList
 from Classes.ClassStack import Stack
 from Classes.ClassQueue import Queue
+
+
 
 
 # FUNC
@@ -80,8 +105,10 @@ def cancel_appointment(aid):
         conn.commit()
         print("Cita cancelada.")
 
+
 # MENÚ PRINCIPAL
 def main():
+    iniciar_sesion()
     ensure_appointments_table()
     while True:
         print("\n---DENTAL CARE - SISTEMA DE CLÍNICA---")
