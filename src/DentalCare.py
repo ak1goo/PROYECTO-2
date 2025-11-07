@@ -22,6 +22,32 @@ from pacientes_sql import (
     search_patients_by_name
 )
 
+#Sistema de inicio de sesión 
+usuariosValidos = {
+    "admin": {
+        "password": "admin123",
+         "rol": "Doctora" 
+         },
+    "recepcionista": {
+        "password": "recep2025",
+         "rol": "Recepcionista"}
+}
+
+def iniciar_sesion():
+    print(" === Sistema Dental Care === ")
+    print("Inicio de sesión ")
+
+    intentos = 3
+    while intentos > 0:
+        usuario = input("Usuario: ").strip()
+        contraseña = input("Contraseña: ").strip()
+
+        if usuario in usuariosValidos and usuariosValidos[usuario]["password"] == contraseña:
+            print(f"Bienvenido/a, {usuario} {usuariosValidos[usuario]['rol']}")
+            return usuario, usuariosValidos[usuario]['rol']
+        else:
+            intentos -= 1
+            print(f"Credenciales incorrectas. Te quedan {intentos} intentos.")
 #DATOS
 class Node:
     def __init__(self, data):
