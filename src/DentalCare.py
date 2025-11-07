@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 """
-Sistema de Clínica Odontológica (versión modular)
-Usa pacientes_sql.py para manejar la base de datos y fotos de pacientes.
+Sistema de Clínica Odontológica 
 """
 
-import os
+import os, sys
 import sqlite3
 import json
 from datetime import datetime
 from dataclasses import dataclass
 from typing import List, Dict, Any
 
-from classNODE import Node
-from classLINKEDLIST import LinkedList
-from classSTACK import Stack
-from classQUEUE import Queue
+#datos
+sys.path.append(os.path.join(os.path.dirname(__file__), "Classes"))
 
-# FUNC
+from Classes.ClassNode import Node
+from Classes.ClassLinkedList import LinkedList
+from Classes.ClassStack import Stack
+from Classes.ClassQueue import Queue
+
+
+#SQL
 from pacientes_sql import (
     Patient,
     create_patient_db,
