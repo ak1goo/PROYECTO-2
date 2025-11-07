@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Sistema de Clínica Odontológica (versión modular)
-Usa pacientes_sql.py para manejar la base de datos y fotos de pacientes.
+Sistema de Clínica Odontológica 
 """
 
-import os
+import os, sys
 import sqlite3
 import json
 from datetime import datetime
